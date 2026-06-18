@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SILA SMD | WhatsApp Bot Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6c63ff;
+            --secondary: #8f5eff;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --border: #334155;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+        }
+        .navbar { 
+            background: var(--card-bg); 
+            border-bottom: 1px solid var(--border); 
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        .navbar-brand { 
+            font-weight: 800; 
+            color: var(--primary) !important; 
+            font-size: 1.5rem;
+        }
+        .navbar-brand i { color: var(--secondary); }
+        
+        .stats-card { 
+            background: linear-gradient(135deg, var(--primary), var(--secondary)); 
+            border-radius: 20px; 
+            padding: 25px 20px; 
+            margin-bottom: 25px; 
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(108, 99, 255, 0.3);
+        }
+        .stats-card h3 { font-size: 3rem; font-weight: 800; margin: 0; }
+        .stats-card p { margin: 0; opacity: 0.9; font-weight: 500; }
+        
+        .post-card { 
+            background: var(--card-bg); 
+            border: 1px solid var(--border); 
+            border-radius: 16px; 
+            padding: 25px; 
+            margin-bottom: 20px; 
+            transition: all 0.3s ease;
+        }
+        .post-card:hover { 
+            border-color: var(--primary); 
+            box-shadow: 0 5px 20px rgba(108, 99, 255, 0.1);
+        }
+        .post-card h5 { 
+            font-weight: 700; 
+            margin-bottom: 20px;
+            color: var(--text);
+        }
+        .post-card h5 i { color: var(--primary); margin-right: 10px; }
+        
+        .btn-primary { 
+            background: linear-gradient(135deg, var(--primary), var(--secondary)); 
+            border: none; 
+            font-weight: 700; 
+            border-radius: 12px; 
+            padding: 12px 25px;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 8px 25px rgba(108, 99, 255, 0.4);
+        }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        
+        .btn-danger { 
+            background: var(--danger); 
+            border: none; 
+            border-radius: 12px;
+            font-weight: 600;
+            padding: 10px 20px;
+        }
+        .btn-danger:hover { background: #dc2626; }
+        
+        .btn-success { 
+            background: var(--success); 
+            border: none; 
+            border-radius: 12px;
+            font-weight: 600;
+            padding: 10px 20px;
+        }
+        .btn-success:hover { background: #059669; }
+        
+        .console-body { 
+            background: #0a0a0a; 
+            border-radius: 12px; 
+            height: 300px; 
+            overflow-y: auto; 
+            padding: 15px; 
+            font-family: 'Fira Code', 'Consolas', monospace; 
+            font-size: 13px; 
+            color: #10b981;
+            border: 1px solid var(--border);
+        }
+        .console-body::-webkit-scrollbar { width: 6px; }
+        .console-body::-webkit-scrollbar-track { background: #1a1a1a; border-radius: 3px; }
+        .console-body::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 3px; }
+        
+        .console-entry { 
+            padding: 3px 0; 
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            animation: fadeIn 0.3s ease;
+        }
+        .console-entry .time { color: var(--muted); margin-right: 10px; }
+        .console-entry .info { color: #60a5fa; }
+        .console-entry .success { color: #34d399; }
+        .console-entry .error { color: #f87171; }
+        .console-entry .warning { color: #fbbf24; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .hidden { display: none !important; }
+        
+        .status-badge { 
+            padding: 6px 18px; 
+            border-radius: 50px; 
+            font-weight: 700; 
+            font-size: 13px;
+            display: inline-block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-badge.connected { 
+            background: rgba(16, 185, 129, 0.2); 
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+        .status-badge.disconnected { 
+            background: rgba(239, 68, 68, 0.2); 
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+        .status-badge.connecting { 
+            background: rgba(245, 158, 11, 0.2); 
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+        
+        .form-control { 
+            background: var(--bg); 
+            border: 1px solid var(--border); 
+            color: var(--text);
+            border-radius: 12px;
+            padding: 12px 15px;
+        }
+        .form-control:focus { 
+            background: var(--bg); 
+            border-color: var(--primary); 
+            color: var(--text);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.2);
+        }
+        .form-control::placeholder { color: var(--muted); }
+        
+        .input-group .form-control { border-radius: 12px 0 0 12px; }
+        .input-group .btn { border-radius: 0 12px 12px 0; }
+        
+        .pairing-code-display {
+            background: rgba(16, 185, 129, 0.1);
+            border: 2px dashed var(--success);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 15px;
+        }
+        .pairing-code-display .code {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--success);
+            font-family: 'Fira Code', monospace;
+            letter-spacing: 3px;
+        }
+        
+        .progress-container {
+            width: 100%;
+            background: var(--border);
+            border-radius: 50px;
+            margin-top: 15px;
+            overflow: hidden;
+            height: 8px;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 50px;
+            transition: width 0.5s ease;
+        }
+        .loading-text {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 8px;
+            text-align: center;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .user-info .bot-name {
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        @media (max-width: 768px) {
+            .stats-card h3 { font-size: 2rem; }
+            .pairing-code-display .code { font-size: 1.8rem; }
+            .console-body { height: 200px; font-size: 11px; }
+            .user-info { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-robot me-2"></i>SILA SMD
+            </a>
+            <span style="color: var(--muted); font-size: 14px;">
+                <i class="fas fa-circle" style="color: var(--success); font-size: 10px;"></i>
+                <span id="totalActive">0</span> Active
+            </span>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Stats -->
+        <div class="stats-card">
+            <h3 id="totalActiveDisplay">0</h3>
+            <p><i class="fas fa-bolt me-2"></i>TOTAL BOTS ACTIVE</p>
+        </div>
+
+        <!-- Setup Section -->
+        <div id="setupSection">
+            <div class="post-card">
+                <h5><i class="fas fa-plus-circle"></i>CREATE / SELECT BOT</h5>
+                <div class="input-group mb-3">
+                    <input type="text" id="userIdInput" class="form-control" placeholder="Enter Bot Name (e.g., MyBot)" value="Bot1">
+                    <button class="btn btn-primary" onclick="selectUser()">
+                        <i class="fas fa-arrow-right me-1"></i> SELECT
+                    </button>
+                </div>
+                <small class="text-muted">
+                    <i class="fas fa-info-circle"></i> Each bot has its own session folder
+                </small>
+            </div>
+        </div>
+
+        <!-- User Dashboard -->
+        <div id="userDashboard" class="hidden">
+            <!-- Stage 1: Pairing -->
+            <div id="stage1">
+                <div class="post-card">
+                    <h5><i class="fas fa-link"></i>PAIRING CODE</h5>
+                    <div class="mb-3">
+                        <label class="form-label">WhatsApp Number (with country code)</label>
+                        <input type="tel" class="form-control" id="pairNumber" placeholder="255700000000">
+                    </div>
+                    <button class="btn btn-primary w-100" id="pairBtn">
+                        <i class="fas fa-key me-2"></i> GENERATE PAIRING CODE
+                    </button>
+                    
+                    <div id="progressContainer" class="progress-container">
+                        <div id="progressBar" class="progress-bar"></div>
+                    </div>
+                    <div id="loadingText" class="loading-text hidden">
+                        <i class="fas fa-spinner fa-spin me-2"></i> Connecting to WhatsApp...
+                    </div>
+
+                    <div id="pairingResult" class="hidden pairing-code-display">
+                        <div style="font-size: 14px; color: var(--muted); margin-bottom: 5px;">
+                            <i class="fas fa-key me-1"></i> YOUR PAIRING CODE
+                        </div>
+                        <div class="code" id="pairingCodeDisplay">----</div>
+                        <div style="font-size: 12px; color: var(--muted); margin-top: 8px;">
+                            Enter this code in WhatsApp → Settings → Linked Devices
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stage 2: Connected -->
+            <div id="stage2" class="hidden">
+                <div class="post-card">
+                    <div class="user-info">
+                        <div>
+                            <span id="connectionStatus" class="status-badge disconnected">
+                                <i class="fas fa-circle me-1"></i> DISCONNECTED
+                            </span>
+                        </div>
+                        <div>
+                            <span class="bot-name" id="activeBotName">Bot: </span>
+                            <span style="color: var(--muted);" id="activeBotNumber"></span>
+                        </div>
+                        <div class="ms-auto">
+                            <button class="btn btn-danger btn-sm" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt me-1"></i> LOGOUT
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="post-card">
+                    <h5><i class="fas fa-terminal"></i>LIVE CONSOLE</h5>
+                    <div class="console-body" id="console">
+                        <div class="console-entry">
+                            <span class="time">[--:--:--]</span>
+                            <span class="info">📡 Waiting for connection...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+        let currentUserId = null;
+        let isPairing = false;
+        let progressInterval = null;
+
+        // Update total active
+        socket.on('total-active', (count) => {
+            document.getElementById('totalActive').innerText = count;
+            document.getElementById('totalActiveDisplay').innerText = count;
+        });
+
+        // Handle pairing code
+        socket.on('pairing-code', (code) => {
+            clearInterval(progressInterval);
+            document.getElementById('progressContainer').style.display = 'none';
+            document.getElementById('loadingText').classList.add('hidden');
+            document.getElementById('pairBtn').disabled = false;
+            isPairing = false;
+            
+            if (code === '✅ CONNECTED') {
+                document.getElementById('pairingResult').classList.add('hidden');
+                return;
+            }
+            
+            document.getElementById('pairingResult').classList.remove('hidden');
+            document.getElementById('pairingCodeDisplay').innerText = code;
+        });
+
+        // Handle console logs
+        socket.on('console', (log) => {
+            const consoleDiv = document.getElementById('console');
+            const entry = document.createElement('div');
+            entry.className = 'console-entry';
+            
+            let typeClass = 'info';
+            let icon = '📌';
+            if (log.type === 'success') { typeClass = 'success'; icon = '✅'; }
+            else if (log.type === 'error') { typeClass = 'error'; icon = '❌'; }
+            else if (log.type === 'warning') { typeClass = 'warning'; icon = '⚠️'; }
+            
+            entry.innerHTML = `
+                <span class="time">[${log.timestamp}]</span>
+                <span class="${typeClass}">${icon} ${log.message}</span>
+            `;
+            consoleDiv.appendChild(entry);
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        });
+
+        // Handle connection status
+        socket.on('connection-status', (status) => {
+            const badge = document.getElementById('connectionStatus');
+            if (status.connected) {
+                badge.className = 'status-badge connected';
+                badge.innerHTML = '<i class="fas fa-circle me-1"></i> CONNECTED';
+                document.getElementById('stage1').classList.add('hidden');
+                document.getElementById('stage2').classList.remove('hidden');
+                document.getElementById('progressContainer').style.display = 'none';
+                document.getElementById('loadingText').classList.add('hidden');
+                document.getElementById('pairingResult').classList.add('hidden');
+                document.getElementById('pairBtn').disabled = false;
+                isPairing = false;
+                clearInterval(progressInterval);
+            } else {
+                badge.className = 'status-badge disconnected';
+                badge.innerHTML = '<i class="fas fa-circle me-1"></i> DISCONNECTED';
+            }
+        });
+
+        // Select/Create user
+        function selectUser() {
+            const userId = document.getElementById('userIdInput').value.trim();
+            if (!userId) {
+                alert('Please enter a bot name');
+                return;
+            }
+            
+            currentUserId = userId;
+            socket.emit('set-user', userId);
+            
+            document.getElementById('activeBotName').innerText = 'Bot: ' + userId;
+            document.getElementById('userDashboard').classList.remove('hidden');
+            document.getElementById('stage1').classList.remove('hidden');
+            document.getElementById('stage2').classList.add('hidden');
+            document.getElementById('pairingResult').classList.add('hidden');
+            document.getElementById('progressContainer').style.display = 'none';
+            document.getElementById('loadingText').classList.add('hidden');
+            document.getElementById('pairBtn').disabled = false;
+            isPairing = false;
+            clearInterval(progressInterval);
+            
+            // Clear console
+            document.getElementById('console').innerHTML = `
+                <div class="console-entry">
+                    <span class="time">[${new Date().toLocaleTimeString()}]</span>
+                    <span class="info">📡 Ready for bot: ${userId}</span>
+                </div>
+            `;
+        }
+
+        // Pairing button
+        document.getElementById('pairBtn').onclick = () => {
+            if (isPairing) return;
+            
+            const number = document.getElementById('pairNumber').value.replace(/[^0-9]/g, '');
+            if (!number || number.length < 10) {
+                alert('Please enter a valid phone number with country code');
+                return;
+            }
+            
+            isPairing = true;
+            document.getElementById('pairBtn').disabled = true;
+            document.getElementById('pairingResult').classList.add('hidden');
+            document.getElementById('progressContainer').style.display = 'block';
+            document.getElementById('loadingText').classList.remove('hidden');
+            
+            // Animate progress bar
+            let width = 0;
+            clearInterval(progressInterval);
+            progressInterval = setInterval(() => {
+                if (width >= 90) {
+                    clearInterval(progressInterval);
+                } else {
+                    width += Math.random() * 3 + 1;
+                    if (width > 90) width = 90;
+                    document.getElementById('progressBar').style.width = width + '%';
+                }
+            }, 200);
+            
+            socket.emit('pair-request', { userId: currentUserId, number });
+            
+            // Timeout for safety
+            setTimeout(() => {
+                if (isPairing) {
+                    isPairing = false;
+                    document.getElementById('pairBtn').disabled = false;
+                    document.getElementById('progressContainer').style.display = 'none';
+                    document.getElementById('loadingText').classList.add('hidden');
+                    clearInterval(progressInterval);
+                }
+            }, 30000);
+        };
+
+        // Logout button
+        document.getElementById('logoutBtn').onclick = () => {
+            if (confirm('Are you sure you want to logout?')) {
+                socket.emit('logout', currentUserId);
+                document.getElementById('stage2').classList.add('hidden');
+                document.getElementById('stage1').classList.remove('hidden');
+                document.getElementById('connectionStatus').className = 'status-badge disconnected';
+                document.getElementById('connectionStatus').innerHTML = '<i class="fas fa-circle me-1"></i> DISCONNECTED';
+            }
+        };
+
+        // Enter key support
+        document.getElementById('userIdInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') selectUser();
+        });
+        document.getElementById('pairNumber').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') document.getElementById('pairBtn').click();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0dbb789fc4d52be',t:'MTc4MTgwMDYyOA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
