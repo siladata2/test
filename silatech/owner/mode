@@ -1,0 +1,140 @@
+// ============================================
+// MODE COMMAND - Set bot mode (public/private/self)
+// Owner Only
+// Powered by SILA TECH
+// ============================================
+
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const ROOT_DIR = path.resolve(__dirname, '../..');
+
+const SETTINGS_FILE = path.join(ROOT_DIR, 'silamd', 'database', 'settings.json');
+
+// ==================== FUNCTIONS ====================
+function getSettings() {
+    try {
+        if (fs.existsSync(SETTINGS_FILE)) {
+            return JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8'));
+        }
+    } catch (e) {}
+    return { MODE: 'public' };
+}
+
+function saveSettings(data) {
+    try {
+        const dir = path.dirname(SETTINGS_FILE);
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+        fs.writeFileSync(SETTINGS_FILE, JSON.stringify(data, null, 2));
+        return true;
+    } catch (e) {
+        console.error('Error saving settings:', e);
+        return false;
+    }
+}
+
+// ==================== MAIN COMMAND ====================
+export default {
+    name: 'mode',
+    description: 'Set bot mode (public, private, self)',
+    category: 'owner',
+    alias: ['setmode', 'botmode', 'changemode'],
+    ownerOnly: true,
+    
+    async execute(sock, msg, args, prefix, config) {
+        const chatId = msg.key.remoteJid;
+        const senderJid = msg.key.participant || msg.key.remoteJid;
+        
+        const settings = getSettings();
+        const currentMode = settings.MODE || 'public';
+        
+        // If no args, show current mode
+        if (!args[0]) {
+            const message = `╭┈┈┄⊰ BOT MODE ⊱┄┄┄◈
+┋
+┋ •> 🎛️ Current Mode: *${currentMode.toUpperCase()}*
+┋
+┋ •> 📋 Available Modes:
+┋ •> ${prefix}mode public - Bot replies to everyone
+┋ •> ${prefix}mode private - Bot replies to owner only
+┋ •> ${prefix}mode self - Bot replies to itself only
+┋
+╰┄┄┄┄┄┈┈┈┈┄┄┄◈
+> ® ${config.POWERED_BY}`;
+            
+            if (config.sendStyledMessage) {
+                await config.sendStyledMessage(sock, chatId, message, { quoted: msg });
+            } else {
+                await sock.sendMessage(chatId, { text: message }, { quoted: msg });
+            }
+            return;
+        }
+        
+        const newMode = args[0].toLowerCase();
+        const validModes = ['public', 'private', 'self'];
+        
+        if (!validModes.includes(newMode)) {
+            const errorMsg = `❌ Invalid mode!\n\nUse: ${prefix}mode public, ${prefix}mode private, or ${prefix}mode self`;
+            if (config.sendStyledMessage) {
+                await config.sendStyledMessage(sock, chatId, errorMsg, { quoted: msg });
+            } else {
+                await sock.sendMessage(chatId, { text: errorMsg }, { quoted: msg });
+            }
+            return;
+        }
+        
+        // Save mode
+        settings.MODE = newMode;
+        saveSettings(settings);
+        
+        // Update botModeManager if exists
+        if (config.botModeManager) {
+            config.botModeManager.setMode(newMode);
+        }
+        
+        let modeIcon = '';
+        let modeDesc = '';
+        
+        switch(newMode) {
+            case 'public':
+                modeIcon = '🌍';
+                modeDesc = 'Bot will reply to ALL users';
+                break;
+            case 'private':
+                modeIcon = '🔒';
+                modeDesc = 'Bot will reply ONLY to owner';
+                break;
+            case 'self':
+                modeIcon = '🤖';
+                modeDesc = 'Bot will reply ONLY to itself';
+                break;
+        }
+        
+        const message = `╭┈┈┄⊰ MODE CHANGED ⊱┄┄┄◈
+┋
+┋ •> ${modeIcon} Mode set to: *${newMode.toUpperCase()}*
+┋ •> 📝 ${modeDesc}
+┋
+┋ •> 👤 Changed by: @${senderJid.split('@')[0]}
+┋
+╰┄┄┄┄┄┈┈┈┈┄┄┄◈
+> ® ${config.POWERED_BY}`;
+        
+        if (config.sendStyledMessage) {
+            await config.sendStyledMessage(sock, chatId, message, { 
+                quoted: msg,
+                contextInfo: config.getContextInfo(msg)
+            });
+        } else {
+            await sock.sendMessage(chatId, {
+                text: message,
+                contextInfo: config.getContextInfo(msg)
+            }, { quoted: msg });
+        }
+    }
+};

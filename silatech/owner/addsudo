@@ -1,0 +1,46 @@
+// silatech/addsudo.js
+export default {
+    name: 'addsudo',
+    description: 'add sudo user',
+    category: 'owner',
+    alias: ['sudo'],
+    ownerOnly: true,
+    
+    async execute(sock, msg, args, prefix, config) {
+        const chatId = msg.key.remoteJid;
+        
+        if (!args[0]) {
+            const message = `╭━━〔 ADD SUDO 〕━━┈⊷
+┃
+┃ Usage:
+┃ ${prefix}addsudo <number or JID>
+┃
+┃ Examples:
+┃ ${prefix}addsudo 255712345678
+┃ ${prefix}addsudo 125903342456863@lid
+┃
+╰━━━━━━━━━━━━━━┈⊷
+> ${config.POWERED_BY}`;
+            
+            await sock.sendMessage(chatId, { text: message }, { quoted: msg });
+            return;
+        }
+        
+        const { addSudo } = await import('../sila/isSudo.js');
+        const userId = args[0];
+        
+        addSudo(userId);
+        
+        const message = `╭━━〔 SUDO ADDED 〕━━┈⊷
+┃
+┃ User: ${userId}
+┃ Status: Added to sudo list
+┃
+┃ This user can now use owner commands
+┃
+╰━━━━━━━━━━━━━━┈⊷
+> ${config.POWERED_BY}`;
+        
+        await sock.sendMessage(chatId, { text: message }, { quoted: msg });
+    }
+};

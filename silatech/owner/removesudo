@@ -1,0 +1,107 @@
+// ============================================
+// REMOVESUDO COMMAND - Remove sudo user
+// Owner only
+// Powered by SILA TECH
+// ============================================
+
+import { removeSudo, getSudoList } from '../../sila/isSudo.js';
+import { cleanJid } from '../../sila/silafunctions.js';
+
+export default {
+    name: 'removesudo',
+    description: 'Remove a sudo user (co-owner)',
+    category: 'owner',
+    alias: ['rmsudo', 'delowner', 'removeowner'],
+    ownerOnly: true,
+    
+    async execute(sock, msg, args, prefix, config) {
+        const chatId = msg.key.remoteJid;
+        
+        if (!args[0]) {
+            const sudoList = getSudoList();
+            let sudoListText = 'No sudo users';
+            
+            if (sudoList.length > 0) {
+                sudoListText = sudoList.map((u, i) => `${i + 1}. +${u.number} (added by ${u.addedBy})`).join('\n┋ •> ');
+            }
+            
+            const message = `╭┈┈┄⊰ REMOVE SUDO ⊱┄┄┄◈
+┋
+┋ •> 📋 Current Sudo Users:
+┋ •> ${sudoListText}
+┋
+┋ •> 📋 Usage:
+┋ •> ${prefix}removesudo <number> - Remove sudo user
+┋ •> ${prefix}removesudo @mention - Mention user
+┋
+┋ •> Example:
+┋ •> ${prefix}removesudo 255700000000
+┋
+╰┄┄┄┄┄┈┈┈┈┄┄┄◈
+> ® ${config.POWERED_BY}`;
+            
+            if (config.sendStyledMessage) {
+                await config.sendStyledMessage(sock, chatId, message, { quoted: msg });
+            } else {
+                await sock.sendMessage(chatId, { text: message }, { quoted: msg });
+            }
+            return;
+        }
+        
+        let targetJid = args[0];
+        
+        // Check if it's a mention
+        if (msg.message?.extendedTextMessage?.contextInfo?.mentionedJid) {
+            const mentioned = msg.message.extendedTextMessage.contextInfo.mentionedJid;
+            if (mentioned && mentioned.length > 0) {
+                targetJid = mentioned[0];
+            }
+        }
+        
+        // Clean the JID
+        const cleaned = cleanJid(targetJid);
+        let userNumber = cleaned.cleanNumber;
+        
+        if (targetJid.match(/^\d+$/) && targetJid.length >= 10) {
+            userNumber = targetJid;
+            targetJid = `${userNumber}@s.whatsapp.net`;
+        }
+        
+        const result = removeSudo(targetJid);
+        
+        if (result.success) {
+            const message = `╭┈┈┄⊰ SUDO REMOVED ⊱┄┄┄◈
+┋
+┋ •> ✅ +${userNumber} is no longer a sudo user!
+┋
+╰┄┄┄┄┄┈┈┈┈┄┄┄◈
+> ® ${config.POWERED_BY}`;
+            
+            if (config.sendStyledMessage) {
+                await config.sendStyledMessage(sock, chatId, message, { quoted: msg });
+            } else {
+                await sock.sendMessage(chatId, { text: message }, { quoted: msg });
+            }
+            
+            // Notify the removed sudo user
+            try {
+                const notifyMessage = `⚠️ *You have been removed as a SUDO USER!*\n\nYou no longer have owner privileges on ${config.BOT_NAME}.`;
+                await sock.sendMessage(targetJid, { text: notifyMessage });
+            } catch (e) {}
+            
+        } else {
+            const message = `╭┈┈┄⊰ SUDO FAILED ⊱┄┄┄◈
+┋
+┋ •> ❌ ${result.error || 'Failed to remove sudo user'}
+┋
+╰┄┄┄┄┄┈┈┈┈┄┄┄◈
+> ® ${config.POWERED_BY}`;
+            
+            if (config.sendStyledMessage) {
+                await config.sendStyledMessage(sock, chatId, message, { quoted: msg });
+            } else {
+                await sock.sendMessage(chatId, { text: message }, { quoted: msg });
+            }
+        }
+    }
+};

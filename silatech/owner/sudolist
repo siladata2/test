@@ -1,0 +1,48 @@
+// ============================================
+// SUDOLIST COMMAND - List all sudo users
+// Owner only
+// Powered by SILA TECH
+// ============================================
+
+import { getSudoList, getSudoCount } from '../../sila/isSudo.js';
+
+export default {
+    name: 'sudolist',
+    description: 'List all sudo users (co-owners)',
+    category: 'owner',
+    alias: ['listsudo', 'sudoers', 'coowners'],
+    ownerOnly: true,
+    
+    async execute(sock, msg, args, prefix, config) {
+        const chatId = msg.key.remoteJid;
+        
+        const sudoList = getSudoList();
+        const count = getSudoCount();
+        
+        let sudoListText = 'No sudo users';
+        
+        if (count > 0) {
+            sudoListText = sudoList.map((u, i) => 
+                `${i + 1}. +${u.number}\n┋    Added: ${new Date(u.addedAt).toLocaleDateString()}\n┋    By: ${u.addedBy}`
+            ).join('\n┋\n┋ •> ');
+        }
+        
+        const message = `╭┈┈┄⊰ SUDO USERS ⊱┄┄┄◈
+┋
+┋ •> 👑 Total Sudo Users: ${count}
+┋
+┋ •> 📋 Sudo List:
+┋ •> ${sudoListText}
+┋
+┋ •> 💡 Sudo users can use all owner commands
+┋
+╰┄┄┄┄┄┈┈┈┈┄┄┄◈
+> ® ${config.POWERED_BY}`;
+        
+        if (config.sendStyledMessage) {
+            await config.sendStyledMessage(sock, chatId, message, { quoted: msg });
+        } else {
+            await sock.sendMessage(chatId, { text: message }, { quoted: msg });
+        }
+    }
+};
